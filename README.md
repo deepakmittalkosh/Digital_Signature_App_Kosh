@@ -65,52 +65,45 @@
 
 ## Adding Signature Functionality:
 
-def add_signature(pdf_path, signature_data_url, loan_id, signature_instance):
-   reader = PdfReader(pdf_path)
-   writer = PdfWriter()
+def add_signature(pdf_path, signature_data_url, loan_id, signature_instance, ip_address, timestamp):
+    
+    reader = PdfReader(pdf_path)
+    
+    writer = PdfWriter()
+    
+    # Decode the base64 image data for the signature
 
+    signature_data = base64.b64decode(signature_data_url.split(',')[1])
+    signature_image = Image.open(io.BytesIO(signature_data))
+    
+    current_date = timezone.now().date().strftime('%Y-%m-%d')
+    current_time = timezone.now().time().strftime('%H:%M:%S')
 
-   # Decode the base64 image data for the signature
-   signature_data = base64.b64decode(signature_data_url.split(',')[1])
-   signature_image = Image.open(io.BytesIO(signature_data))
+    for page_num in range(len(reader.pages)):
+        page = reader.pages[page_num]
+        packet = io.BytesIO()
+        can = canvas.Canvas(packet, pagesize=letter)
+        signature_image = signature_image.resize((80, 90))
+        
+        
+        can.drawImage(ImageReader(signature_image), signature_instance.x_position, signature_instance.y_position + 10, width=80, height=90)
+        
+        text_y_position = signature_instance.y_position + 20
+        
+        can.drawString(signature_instance.x_position, text_y_position - 10, f"{loan_id}")
+        can.drawString(signature_instance.x_position, text_y_position - 20, f"{ip_address}")
+        can.drawString(signature_instance.x_position, text_y_position - 30, f"{current_date}")
+        can.drawString(signature_instance.x_position, text_y_position - 40, f"{current_time}")
+        can.save()
 
+        packet.seek(0)
+        overlay_pdf = PdfReader(packet)
+        overlay_page = overlay_pdf.pages[0]
+        page.merge_page(overlay_page)
+        writer.add_page(page)
 
-   for page_num in range(len(reader.pages)):
-       page = reader.pages[page_num]
-       packet = io.BytesIO()
-       can = canvas.Canvas(packet, pagesize=letter)
-      
-       box_x = signature_instance.x_position - 5
-       box_y = signature_instance.y_position - 12
-       box_width = 100  # Adjust width as needed
-       box_height = 90  # Adjust height as needed
-       can.rect(box_x, box_y, box_width, box_height, stroke=1, fill=0)
-
-
-       # Position the signature at the calculated position
-       width, height = letter
-       signature_image = signature_image.resize((75, 75))
-       can.drawImage(ImageReader(signature_image), signature_instance.x_position, signature_instance.y_position, width=75, height=75)
-       #can.drawString(signature_instance.x_position, signature_instance.y_position + 110, f"Loan ID: {loan_id}")
-       text_y_position = signature_instance.y_position - 10  # Adjust this value to position below
-       can.drawString(signature_instance.x_position, text_y_position, f"Loan ID: {loan_id}")
-
-
-       can.save()
-
-
-       packet.seek(0)
-       overlay_pdf = PdfReader(packet)
-       overlay_page = overlay_pdf.pages[0]
-
-
-       # Merge the overlay page with the original page
-       page.merge_page(overlay_page)
-       writer.add_page(page)
-
-
-   with open(pdf_path, 'wb') as output_pdf:
-       writer.write(output_pdf)
+    with open(pdf_path, 'wb') as output_pdf:
+        writer.write(output_pdf)
 
 
 
