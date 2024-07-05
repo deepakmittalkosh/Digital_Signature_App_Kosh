@@ -25,12 +25,14 @@
 
 ## Models:
 
-### LoanAgreement
+### LoanAgreement:
+
 #### borrower: CharField
 #### document: FileField
 #### uploaded_at: DateTimeField
 
-### BorrowerSignature
+### BorrowerSignature:
+
 #### agreement: ForeignKey (LoanAgreement)
 #### loan_id: CharField
 #### name: CharField
@@ -43,7 +45,8 @@
 #### x_position:IntegerField
 #### timestamp: DateTimeField
 
-## Forms
+## Forms:
+
 #### NumberOfBorrowersForm : Enters the number of borrowers applied for the loan.
 #### BorrowerDetailForm : Enters the details of the borrowers such as Loan ID,Name and Mobile Number
 #### LoanAgreementForm : Used for uploading loan agreements.
@@ -51,6 +54,7 @@
 
 
 ## Views:
+
 #### LoanProcessView : Allow lenders to enter the number of borrowers,borrower details,upload agreement and generate the links respectively.
 #### ViewOriginalDocument : Allow borrowers to view the loan agreement and acknowledge it.
 #### SignAgreementView : Opens the signature pad on which the borrower has to sign.
@@ -60,6 +64,7 @@
 
 
 ## Adding Signature Functionality:
+
 def add_signature(pdf_path, signature_data_url, loan_id, signature_instance):
    reader = PdfReader(pdf_path)
    writer = PdfWriter()
